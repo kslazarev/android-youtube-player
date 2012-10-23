@@ -434,7 +434,15 @@ public class OpenYouTubePlayerActivity extends Activity {
 
                 final MediaController lMediaController = new MediaController(OpenYouTubePlayerActivity.this);
                 mVideoView.setMediaController(lMediaController);
-                lMediaController.show(0);
+
+                Bundle bundle = getIntent().getExtras();
+
+                boolean showControllerOnStartup = false;
+
+                if (!(bundle == null)) showControllerOnStartup = bundle.getBoolean("show_controller_on_startup", false);
+
+                if (showControllerOnStartup) lMediaController.show(0);
+
                 //mVideoView.setKeepScreenOn(true);
                 mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 
