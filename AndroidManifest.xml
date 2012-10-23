@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.keyes.youtube"
+      android:versionCode="1"
+      android:versionName="1.0">
+      
+    <!-- =============================================================== -->
+    <!-- The OpenYouTubeActivity requires these permissions              --> 
+    <!-- =============================================================== -->
+    <uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+
+	<uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4"/>
+	
+	
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".Sample"
+                  android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <!-- =============================================================== -->
+        <!-- This is what you'll need to include in your manifest to declare --> 
+        <!-- the OpenYouTubeActivity in your project                         -->
+        <!-- =============================================================== -->
+        <activity  
+                android:name=".OpenYouTubePlayerActivity"  
+                android:screenOrientation="landscape"
+                android:configChanges="orientation"
+                android:theme="@android:style/Theme.Black"
+                android:label="@string/app_name">  
+        </activity> 
+
+    </application>
+    <uses-sdk android:minSdkVersion="4" />
+
+</manifest> 
