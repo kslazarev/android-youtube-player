@@ -87,6 +87,7 @@ public class OpenYouTubePlayerActivity extends Activity {
 
     public static final String SCHEME_YOUTUBE_VIDEO = "ytv";
     public static final String SCHEME_YOUTUBE_PLAYLIST = "ytpl";
+    public static final String SCHEME_FILE = "file";
 
     static final String YOUTUBE_VIDEO_INFORMATION_URL = "http://www.youtube.com/get_video_info?&video_id=";
     static final String YOUTUBE_PLAYLIST_ATOM_FEED_URL = "http://gdata.youtube.com/feeds/api/playlists/";
@@ -176,6 +177,8 @@ public class OpenYouTubePlayerActivity extends Activity {
             lYouTubeId = new PlaylistId(lVideoIdStr);
         } else if (lVideoSchemeStr != null && lVideoSchemeStr.equalsIgnoreCase(SCHEME_YOUTUBE_VIDEO)) {
             lYouTubeId = new VideoId(lVideoIdStr);
+        } else if (lVideoSchemeStr != null && lVideoSchemeStr.equalsIgnoreCase(SCHEME_FILE)) {
+            lYouTubeId = new FileId(lVideoIdStr);
         }
 
         if (lYouTubeId == null) {
@@ -327,76 +330,80 @@ public class OpenYouTubePlayerActivity extends Activity {
 
         @Override
         protected Uri doInBackground(YouTubeId... pParams) {
-            String lUriStr = null;
-            String lYouTubeFmtQuality = "17";   // 3gpp medium quality, which should be fast enough to view over EDGE connection
-            String lYouTubeVideoId = null;
+            if (pParams[0] instanceof FileId) {
+                return Uri.parse(pParams[0].getId());
+            } else {
+                String lUriStr = null;
+                String lYouTubeFmtQuality = "17";   // 3gpp medium quality, which should be fast enough to view over EDGE connection
+                String lYouTubeVideoId = null;
 
-            if (isCancelled())
-                return null;
+                if (isCancelled())
+                    return null;
 
-            try {
+                try {
 
-                publishProgress(new ProgressUpdateInfo(mMsgDetect));
+                    publishProgress(new ProgressUpdateInfo(mMsgDetect));
 
-                WifiManager lWifiManager = (WifiManager) OpenYouTubePlayerActivity.this.getSystemService(Context.WIFI_SERVICE);
-                TelephonyManager lTelephonyManager = (TelephonyManager) OpenYouTubePlayerActivity.this.getSystemService(Context.TELEPHONY_SERVICE);
+                    WifiManager lWifiManager = (WifiManager) OpenYouTubePlayerActivity.this.getSystemService(Context.WIFI_SERVICE);
+                    TelephonyManager lTelephonyManager = (TelephonyManager) OpenYouTubePlayerActivity.this.getSystemService(Context.TELEPHONY_SERVICE);
 
-                ////////////////////////////
-                // if we have a fast connection (wifi or 3g), then we'll get a high quality YouTube video
-                if ((lWifiManager.isWifiEnabled() && lWifiManager.getConnectionInfo() != null && lWifiManager.getConnectionInfo().getIpAddress() != 0) ||
-                        ((lTelephonyManager.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS ||
+                    ////////////////////////////
+                    // if we have a fast connection (wifi or 3g), then we'll get a high quality YouTube video
+                    if ((lWifiManager.isWifiEnabled() && lWifiManager.getConnectionInfo() != null && lWifiManager.getConnectionInfo().getIpAddress() != 0) ||
+                            ((lTelephonyManager.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS ||
 
 					   /* icky... using literals to make backwards compatible with 1.5 and 1.6 */
-                                lTelephonyManager.getNetworkType() == 9 /*HSUPA*/ ||
-                                lTelephonyManager.getNetworkType() == 10 /*HSPA*/ ||
-                                lTelephonyManager.getNetworkType() == 8 /*HSDPA*/ ||
-                                lTelephonyManager.getNetworkType() == 5 /*EVDO_0*/ ||
-                                lTelephonyManager.getNetworkType() == 6 /*EVDO A*/)
+                                    lTelephonyManager.getNetworkType() == 9 /*HSUPA*/ ||
+                                    lTelephonyManager.getNetworkType() == 10 /*HSPA*/ ||
+                                    lTelephonyManager.getNetworkType() == 8 /*HSDPA*/ ||
+                                    lTelephonyManager.getNetworkType() == 5 /*EVDO_0*/ ||
+                                    lTelephonyManager.getNetworkType() == 6 /*EVDO A*/)
 
-                                && lTelephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED)
-                        ) {
-                    lYouTubeFmtQuality = "18";
+                                    && lTelephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED)
+                            ) {
+                        lYouTubeFmtQuality = "18";
+                    }
+
+
+                    ///////////////////////////////////
+                    // if the intent is to show a playlist, get the latest video id from the playlist, otherwise the video
+                    // id was explicitly declared.
+                    if (pParams[0] instanceof PlaylistId) {
+                        publishProgress(new ProgressUpdateInfo(mMsgPlaylist));
+                        lYouTubeVideoId = YouTubeUtility.queryLatestPlaylistVideo((PlaylistId) pParams[0]);
+                    } else if (pParams[0] instanceof VideoId) {
+                        lYouTubeVideoId = pParams[0].getId();
+                    }
+
+                    mVideoId = lYouTubeVideoId;
+
+                    publishProgress(new ProgressUpdateInfo(mMsgToken));
+
+                    if (isCancelled())
+                        return null;
+
+                    ////////////////////////////////////
+                    // calculate the actual URL of the video, encoded with proper YouTube token
+                    lUriStr = YouTubeUtility.calculateYouTubeUrl(lYouTubeFmtQuality, true, lYouTubeVideoId);
+
+                    if (isCancelled())
+                        return null;
+
+                    if (lYouTubeFmtQuality.equals("17")) {
+                        publishProgress(new ProgressUpdateInfo(mMsgLowBand));
+                    } else {
+                        publishProgress(new ProgressUpdateInfo(mMsgHiBand));
+                    }
+
+                } catch (Exception e) {
+                    Log.e(this.getClass().getSimpleName(), "Error occurred while retrieving information from YouTube.", e);
                 }
 
-
-                ///////////////////////////////////
-                // if the intent is to show a playlist, get the latest video id from the playlist, otherwise the video
-                // id was explicitly declared.
-                if (pParams[0] instanceof PlaylistId) {
-                    publishProgress(new ProgressUpdateInfo(mMsgPlaylist));
-                    lYouTubeVideoId = YouTubeUtility.queryLatestPlaylistVideo((PlaylistId) pParams[0]);
-                } else if (pParams[0] instanceof VideoId) {
-                    lYouTubeVideoId = pParams[0].getId();
-                }
-
-                mVideoId = lYouTubeVideoId;
-
-                publishProgress(new ProgressUpdateInfo(mMsgToken));
-
-                if (isCancelled())
-                    return null;
-
-                ////////////////////////////////////
-                // calculate the actual URL of the video, encoded with proper YouTube token
-                lUriStr = YouTubeUtility.calculateYouTubeUrl(lYouTubeFmtQuality, true, lYouTubeVideoId);
-
-                if (isCancelled())
-                    return null;
-
-                if (lYouTubeFmtQuality.equals("17")) {
-                    publishProgress(new ProgressUpdateInfo(mMsgLowBand));
+                if (lUriStr != null) {
+                    return Uri.parse(lUriStr);
                 } else {
-                    publishProgress(new ProgressUpdateInfo(mMsgHiBand));
+                    return null;
                 }
-
-            } catch (Exception e) {
-                Log.e(this.getClass().getSimpleName(), "Error occurred while retrieving information from YouTube.", e);
-            }
-
-            if (lUriStr != null) {
-                return Uri.parse(lUriStr);
-            } else {
-                return null;
             }
         }
 
@@ -439,7 +446,8 @@ public class OpenYouTubePlayerActivity extends Activity {
 
                 boolean showControllerOnStartup = false;
 
-                if (!(bundle == null)) showControllerOnStartup = bundle.getBoolean("show_controller_on_startup", false);
+                if (!(bundle == null))
+                    showControllerOnStartup = bundle.getBoolean("show_controller_on_startup", false);
 
                 if (showControllerOnStartup) lMediaController.show(0);
 
