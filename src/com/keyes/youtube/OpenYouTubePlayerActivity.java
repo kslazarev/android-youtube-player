@@ -248,13 +248,13 @@ public class OpenYouTubePlayerActivity extends Activity {
         lRelLayout.setId(2);
         lRelLayout.setGravity(Gravity.CENTER);
         lRelLayout.setBackgroundColor(Color.BLACK);
-        android.widget.RelativeLayout.LayoutParams lRelLayoutParms = new android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT);
+        android.widget.RelativeLayout.LayoutParams lRelLayoutParms = new android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         lRelLayout.setLayoutParams(lRelLayoutParms);
         lLinLayout.addView(lRelLayout);
 
         mVideoView = new VideoView(this);
         mVideoView.setId(3);
-        android.widget.RelativeLayout.LayoutParams lVidViewLayoutParams = new android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        android.widget.RelativeLayout.LayoutParams lVidViewLayoutParams = new android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         lVidViewLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
         mVideoView.setLayoutParams(lVidViewLayoutParams);
         lRelLayout.addView(mVideoView);
